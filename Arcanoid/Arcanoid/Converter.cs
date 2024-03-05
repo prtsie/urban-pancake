@@ -8,9 +8,14 @@ namespace Arcanoid
 {
     static internal class Converter
     {
-        public static int PercentToPixels(double percent, double size)
+        public static int PercentToPixels(double percent, int size)
         {
             return (int)Math.Round(size * percent);
+        }
+
+        public static double PixelsToPercent(int pixels, int size)
+        {
+            return pixels / (double)size;
         }
     }
 }

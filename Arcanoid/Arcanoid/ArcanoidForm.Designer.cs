@@ -28,7 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
+            moveDelay = new System.Windows.Forms.Timer(components);
             SuspendLayout();
+            // 
+            // moveDelay
+            // 
+            moveDelay.Interval = 30;
+            moveDelay.Tick += moveDelayTick;
             // 
             // ArcanoidForm
             // 
@@ -40,10 +47,14 @@
             Text = "Arcanoid";
             Shown += ArcanoidFormShown;
             Paint += ArcanoidFormOnPaint;
-            Resize += this.ArcanoidFormOnResize;
+            KeyDown += ArcanoidForm_KeyDown;
+            KeyUp += ArcanoidForm_KeyUp;
+            Resize += ArcanoidFormOnResize;
             ResumeLayout(false);
         }
 
         #endregion
+
+        private System.Windows.Forms.Timer moveDelay;
     }
 }

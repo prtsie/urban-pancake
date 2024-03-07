@@ -18,19 +18,19 @@ namespace Arcanoid
 
         public double RelativeVerticalPos { get; set; } = relativeY;
 
-        public Point GetPosition(Size size)
+        public Point GetPosition(Size relativeTo)
         {
-            return new Point(PercentToPixels(RelativeHorizontalPos, size.Width), PercentToPixels(RelativeVerticalPos, size.Height));
+            return new Point(PercentToPixels(RelativeHorizontalPos, relativeTo.Width), PercentToPixels(RelativeVerticalPos, relativeTo.Height));
         }
 
-        public virtual Size GetSize(Size size)
+        public virtual Size GetSize(Size relativeTo)
         {
-            return new Size(PercentToPixels(RelativeWidth, size.Width), PercentToPixels(RelativeHeight, size.Height));
+            return new Size(PercentToPixels(RelativeWidth, relativeTo.Width), PercentToPixels(RelativeHeight, relativeTo.Height));
         }
 
-        public Rectangle GetRectangle(Size size)
+        public Rectangle GetRectangle(Size relativeTo)
         {
-            return new Rectangle(GetPosition(size), GetSize(size));
+            return new Rectangle(GetPosition(relativeTo), GetSize(relativeTo));
         }
     }
 }

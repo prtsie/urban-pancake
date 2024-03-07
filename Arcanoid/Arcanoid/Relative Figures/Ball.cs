@@ -19,9 +19,10 @@ namespace Arcanoid
             RelativeVerticalPos += Speed.Y;
         }
 
-        public override Size GetSize(Size size)
+        public override Size GetSize(Size relativeTo)
         {
-            return new Size(PercentToPixels(RelativeWidth, size.Height), PercentToPixels(RelativeHeight, size.Height));
+            var size = PercentToPixels(RelativeWidth, relativeTo.Height);
+            return new Size(size, size);
         }
     }
 }

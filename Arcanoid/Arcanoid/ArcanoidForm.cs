@@ -6,13 +6,14 @@ namespace Arcanoid
     {
         private const int Rows = 10;
         private const int Cols = 15;
-        private Size blocksSpacing;
-        private Size blockSize;
+        private double blocksSpacing;
+        private (double Width, double Height) blockSize;
+        private Size blockRectSize;
         private RelativeObject platform;
         private Ball ball;
         private BufferedGraphics buffer;
         private readonly Pen borderPen = Pens.White;
-        private readonly Rectangle[,] blocks = new Rectangle[Rows, Cols];
+        private readonly Block[,] blocks = new Block[Rows, Cols];
         private Keys pressedKey;
         private bool isGameOver;
 
@@ -29,15 +30,18 @@ namespace Arcanoid
             buffer.Graphics.Clear(BackColor);
             foreach (var block in blocks)
             {
-                buffer.Graphics.DrawRectangle(borderPen, block);
+                if (!block.IsBroken)
+                {
+                    buffer.Graphics.DrawRectangle(borderPen, new Rectangle(block.GetPosition(Size), blockRectSize));
+                }
             }
             buffer.Graphics.DrawRectangle(borderPen, platform.GetRectangle(Size));
             buffer.Graphics.DrawEllipse(borderPen, ball.GetRectangle(Size));
             if (isGameOver)
             {
                 var onGameOverMessage = "Game over";
-                var size = buffer.Graphics.MeasureString(onGameOverMessage, DefaultFont).ToSize();
-                var location = new Point((DisplayRectangle.Width - size.Width) / 2, (DisplayRectangle.Height - size.Height) / 2);
+                var stringSize = buffer.Graphics.MeasureString(onGameOverMessage, DefaultFont).ToSize();
+                var location = new Point((DisplayRectangle.Width - stringSize.Width) / 2, (DisplayRectangle.Height - stringSize.Height) / 2);
                 buffer.Graphics.DrawString(onGameOverMessage, DefaultFont, borderPen.Brush, location);
                 buffer.Render();
             }
@@ -57,21 +61,19 @@ namespace Arcanoid
             }
         }
 
-        private void InitBlocks()
+        private void RelocateBlocks()
         {
             CalculateElementsSize();
-            var roundUncertainty = CalculateRoundUncertainty() / 2;
             for (var row = 0; row < Rows; row++)
             {
                 for (var col = 0; col < Cols; col++)
                 {
-                    blocks[row, col] = new Rectangle(blockSize.Width * col + blocksSpacing.Width * (col + 1) + roundUncertainty,
-                                                     blockSize.Height * row + blocksSpacing.Height * (row + 1),
-                                                     blockSize.Width,
-                                                     blockSize.Height);
+                    blocks[row, col].RelativeHorizontalPos = blockSize.Width * col + blocksSpacing * (col + 1);
+                    blocks[row, col].RelativeVerticalPos = blockSize.Height * row + blocksSpacing * (row + 1);
+                    blocks[row, col].RelativeWidth = blockSize.Width;
+                    blocks[row, col].RelativeHeight = blockSize.Height;
                 }
             }
-            ResizeBlocks();
         }
 
         private void InitPlatform()
@@ -86,17 +88,24 @@ namespace Arcanoid
 
         private void Init()
         {
-            InitBlocks();
+            for (var row = 0; row < Rows; row++)
+            {
+                for (var col = 0; col < Cols; col++)
+                {
+                    blocks[row, col] = new Block(0, 0, 0, 0);
+                }
+            }
             InitPlatform();
             InitBall();
+            RelocateBlocks();
         }
 
         private void CalculateElementsSize()
         {
-            var spacing = 0.01;
-            blocksSpacing = new Size(PercentToPixels(spacing, DisplayRectangle.Width), PercentToPixels(spacing, DisplayRectangle.Height));
-            var blockWidth = PercentToPixels((1.0 - spacing * (Cols + 2)) / blocks.GetLength(1), DisplayRectangle.Width); //Ўирина блоков с учЄтом двух отступов Ч слева и справа
-            blockSize = new Size(blockWidth, PercentToPixels(0.02, DisplayRectangle.Height));
+            blocksSpacing = 0.015;
+            var blockWidth = (1.0 - blocksSpacing * (Cols + 2)) / Cols; //Ўирина блоков с учЄтом двух отступов Ч слева и справа
+            blockSize = (blockWidth, 0.02);
+            blockRectSize = new(PercentToPixels(blockWidth, DisplayRectangle.Width), PercentToPixels(0.02, DisplayRectangle.Height));
         }
 
         private void CheckColliders()
@@ -130,12 +139,16 @@ namespace Arcanoid
                 {
                     for (var col = 0; col < Cols; col++)
                     {
-                        var intersect = Rectangle.Intersect(ballRect, blocks[row, col]);
+                        if (blocks[row, col].IsBroken)
+                        {
+                            continue;
+                        }
+                        var intersect = Rectangle.Intersect(ballRect, blocks[row, col].GetRectangle(Size));
                         if (intersect == Rectangle.Empty)
                         {
                             continue;
                         }
-                        blocks[row, col] = Rectangle.Empty;
+                        blocks[row, col].IsBroken = true;
                         if (intersect.Width > intersect.Height)
                         {
                             verticalColliding = true;
@@ -157,43 +170,6 @@ namespace Arcanoid
             }
         }
 
-        private void ResizeBlocks()
-        {
-            var xOffset = blockSize.Width + blocksSpacing.Width;
-            var yOffset = blockSize.Height + blocksSpacing.Height;
-            xOffset -= blockSize.Width + blocksSpacing.Width;
-            yOffset -= blockSize.Height + blocksSpacing.Height;
-            for (var row = 0; row < Rows; row++)
-            {
-                for (var col = 0; col < Cols; col++)
-                {
-                    if (blocks[row, col] != Rectangle.Empty)
-                    {
-                        blocks[row, col].Size = blockSize;
-                    }
-                }
-            }
-            for (var row = 0; row < Rows; row++)
-            {
-                for (var col = 1; col < Cols; col++)
-                {
-                    blocks[row, col].Offset(-xOffset * col, 0);
-                }
-            }
-            for (var row = 1; row < Rows; row++)
-            {
-                for (var col = 0; col < Cols; col++)
-                {
-                    blocks[row, col].Offset(0, -yOffset * row);
-                }
-            }
-        }
-
-        private int CalculateRoundUncertainty()
-        {
-            return DisplayRectangle.Width - ((blockSize.Width + blocksSpacing.Width) * Cols + blocksSpacing.Width);
-        }
-
         private void ArcanoidFormOnPaint(object _, PaintEventArgs __)
         {
             Redraw();
@@ -201,7 +177,6 @@ namespace Arcanoid
 
         private void ArcanoidFormShown(object _, EventArgs __)
         {
-            CalculateElementsSize();
             Init();
             buffer = BufferedGraphicsManager.Current.Allocate(CreateGraphics(), DisplayRectangle);
             gameTimer.Start();
@@ -209,7 +184,7 @@ namespace Arcanoid
 
         private void ArcanoidFormOnResize(object _, EventArgs __)
         {
-            InitBlocks();
+            RelocateBlocks();
             if (DisplayRectangle.Width > 640 && DisplayRectangle.Height > 480)
             {
                 buffer = BufferedGraphicsManager.Current.Allocate(CreateGraphics(), DisplayRectangle);
@@ -221,7 +196,7 @@ namespace Arcanoid
         {
             if (platform.RelativeWidth > 0.02)
             {
-                var sizeReductionSpeed = 0.002;
+                var sizeReductionSpeed = 0.00002;
                 platform.RelativeWidth -= sizeReductionSpeed;
                 platform.RelativeHorizontalPos += sizeReductionSpeed / 2;
             }

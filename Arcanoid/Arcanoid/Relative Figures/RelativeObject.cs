@@ -1,28 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Arcanoid.Converter;
+using static Arcanoid.Measures.Converter;
 
 namespace Arcanoid
 {
-    internal class Platform(Rectangle rect, Size size)
+    internal class RelativeObject(double relativeX, double relativeY, double relativeWidth, double relativeHeight)
     {
-        public double RelativeWidth { get; private set; } = PixelsToPercent(rect.Width, size.Width);
+        public double RelativeWidth { get; set; } = relativeWidth;
 
-        public double RelativeHeight { get; private set; } = PixelsToPercent(rect.Height, size.Height);
+        public double RelativeHeight { get; set; } = relativeHeight;
 
-        public double RelativeHorizontalPos { get; set; } = PixelsToPercent(rect.Location.X, size.Width);
+        public double RelativeHorizontalPos { get; set; } = relativeX;
 
-        public double RelativeVerticalPos { get; set; } = PixelsToPercent(rect.Location.Y, size.Height);
+        public double RelativeVerticalPos { get; set; } = relativeY;
 
         public Point GetPosition(Size size)
         {
             return new Point(PercentToPixels(RelativeHorizontalPos, size.Width), PercentToPixels(RelativeVerticalPos, size.Height));
         }
 
-        public Size GetSize(Size size)
+        public virtual Size GetSize(Size size)
         {
             return new Size(PercentToPixels(RelativeWidth, size.Width), PercentToPixels(RelativeHeight, size.Height));
         }

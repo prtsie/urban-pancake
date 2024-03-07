@@ -29,13 +29,13 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            moveDelay = new System.Windows.Forms.Timer(components);
+            gameTimer = new System.Windows.Forms.Timer(components);
             SuspendLayout();
             // 
-            // moveDelay
+            // gameTimer
             // 
-            moveDelay.Interval = 30;
-            moveDelay.Tick += moveDelayTick;
+            gameTimer.Interval = 30;
+            gameTimer.Tick += gameTimerTick;
             // 
             // ArcanoidForm
             // 
@@ -43,6 +43,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.Black;
             ClientSize = new Size(931, 520);
+            MinimumSize = new Size(640, 480);
             Name = "ArcanoidForm";
             Text = "Arcanoid";
             Shown += ArcanoidFormShown;
@@ -55,6 +56,6 @@
 
         #endregion
 
-        private System.Windows.Forms.Timer moveDelay;
+        private System.Windows.Forms.Timer gameTimer;
     }
 }

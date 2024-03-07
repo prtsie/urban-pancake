@@ -1,4 +1,4 @@
-using static Arcanoid.Converter;
+using static Arcanoid.Measures.Converter;
 
 namespace Arcanoid
 {
@@ -6,20 +6,22 @@ namespace Arcanoid
     {
         private const int Rows = 10;
         private const int Cols = 15;
-        private const double PlatformSpeed = 0.015;
         private Size blocksSpacing;
         private Size blockSize;
-        private Platform platform;
+        private RelativeObject platform;
+        private Ball ball;
         private BufferedGraphics buffer;
         private readonly Pen borderPen = Pens.White;
         private readonly Rectangle[,] blocks = new Rectangle[Rows, Cols];
         private Keys pressedKey;
+        private bool isGameOver;
 
         public ArcanoidForm()
         {
             InitializeComponent();
             buffer = null!;
             platform = null!;
+            ball = null!;
         }
 
         private void Redraw()
@@ -30,40 +32,63 @@ namespace Arcanoid
                 buffer.Graphics.DrawRectangle(borderPen, block);
             }
             buffer.Graphics.DrawRectangle(borderPen, platform.GetRectangle(Size));
+            buffer.Graphics.DrawEllipse(borderPen, ball.GetRectangle(Size));
+            if (isGameOver)
+            {
+                var onGameOverMessage = "Game over";
+                var size = buffer.Graphics.MeasureString(onGameOverMessage, DefaultFont).ToSize();
+                var location = new Point((DisplayRectangle.Width - size.Width) / 2, (DisplayRectangle.Height - size.Height) / 2);
+                buffer.Graphics.DrawString(onGameOverMessage, DefaultFont, borderPen.Brush, location);
+                buffer.Render();
+            }
             buffer.Render();
         }
 
         private void MovePlatform(Keys key)
         {
-            if (key == Keys.Left && platform.GetPosition(Size).X - PlatformSpeed > 0)
+            var platformSpeed = 0.009;
+            if (key == Keys.Left && platform.GetPosition(Size).X - platformSpeed > 0)
             {
-                platform.RelativeHorizontalPos -= PlatformSpeed;
+                platform.RelativeHorizontalPos -= platformSpeed;
             }
-            else if (key == Keys.Right && platform.GetRectangle(Size).Right + PlatformSpeed < Size.Width)
+            else if (key == Keys.Right && platform.GetRectangle(Size).Right + platformSpeed < Size.Width)
             {
-                platform.RelativeHorizontalPos += PlatformSpeed;
+                platform.RelativeHorizontalPos += platformSpeed;
             }
         }
 
         private void InitBlocks()
         {
+            CalculateElementsSize();
+            var roundUncertainty = CalculateRoundUncertainty() / 2;
             for (var row = 0; row < Rows; row++)
             {
                 for (var col = 0; col < Cols; col++)
                 {
-                    blocks[row, col] = new Rectangle(blockSize.Width * col + blocksSpacing.Width * (col + 1),
+                    blocks[row, col] = new Rectangle(blockSize.Width * col + blocksSpacing.Width * (col + 1) + roundUncertainty,
                                                      blockSize.Height * row + blocksSpacing.Height * (row + 1),
                                                      blockSize.Width,
                                                      blockSize.Height);
                 }
             }
+            ResizeBlocks();
         }
 
         private void InitPlatform()
         {
-            var platformSize = new Size(PercentToPixels(0.15, DisplayRectangle.Width), PercentToPixels(0.03, DisplayRectangle.Height));
-            var platformLocation = new Point(DisplayRectangle.Width / 2 - platformSize.Width / 2, DisplayRectangle.Height - PercentToPixels(0.12, DisplayRectangle.Height));
-            platform = new Platform(new Rectangle(platformLocation, platformSize), Size);
+            platform = new(0.5 - 0.15 / 2, 0.88, 0.15, 0.03);
+        }
+
+        private void InitBall()
+        {
+            ball = new Ball(0.012, platform.RelativeHorizontalPos, platform.RelativeVerticalPos - 0.1);
+        }
+
+        private void Init()
+        {
+            InitBlocks();
+            InitPlatform();
+            InitBall();
         }
 
         private void CalculateElementsSize()
@@ -74,24 +99,78 @@ namespace Arcanoid
             blockSize = new Size(blockWidth, PercentToPixels(0.02, DisplayRectangle.Height));
         }
 
+        private void CheckColliders()
+        {
+            var ballRect = ball.GetRectangle(Size);
+            isGameOver = ballRect.Bottom > DisplayRectangle.Bottom;
+            if (isGameOver)
+            {
+                gameTimer.Stop();
+                return;
+            }
+            var platformRect = platform.GetRectangle(Size);
+            var horizontalColliding = ballRect.Right > DisplayRectangle.Right || ballRect.Left < DisplayRectangle.Left;
+            var verticalColliding = ballRect.Top < DisplayRectangle.Top;
+            var platformIntersect = Rectangle.Intersect(ballRect, platformRect);
+            if (platformIntersect != Rectangle.Empty)
+            {
+                ball.RelativeVerticalPos = platform.RelativeVerticalPos - ball.RelativeHeight;
+                if (platformIntersect.Width < platformIntersect.Height)
+                {
+                    horizontalColliding = true;
+                }
+                else
+                {
+                    verticalColliding = true;
+                }
+            }
+            else
+            {
+                for (var row = 0; row < Rows; row++)
+                {
+                    for (var col = 0; col < Cols; col++)
+                    {
+                        var intersect = Rectangle.Intersect(ballRect, blocks[row, col]);
+                        if (intersect == Rectangle.Empty)
+                        {
+                            continue;
+                        }
+                        blocks[row, col] = Rectangle.Empty;
+                        if (intersect.Width > intersect.Height)
+                        {
+                            verticalColliding = true;
+                        }
+                        else
+                        {
+                            horizontalColliding = true;
+                        }
+                    }
+                }
+            }
+            if (horizontalColliding)
+            {
+                ball.Speed = ball.Speed with { X = -ball.Speed.X };
+            }
+            if (verticalColliding)
+            {
+                ball.Speed = ball.Speed with { Y = -ball.Speed.Y };
+            }
+        }
+
         private void ResizeBlocks()
         {
             var xOffset = blockSize.Width + blocksSpacing.Width;
             var yOffset = blockSize.Height + blocksSpacing.Height;
-            CalculateElementsSize();
             xOffset -= blockSize.Width + blocksSpacing.Width;
             yOffset -= blockSize.Height + blocksSpacing.Height;
             for (var row = 0; row < Rows; row++)
             {
-            }
-            for (var col = 0; col < Cols; col++)
-            {
-            }
-            for (var row = 0; row < Rows; row++)
-            {
                 for (var col = 0; col < Cols; col++)
                 {
-                    blocks[row, col].Size = blockSize;
+                    if (blocks[row, col] != Rectangle.Empty)
+                    {
+                        blocks[row, col].Size = blockSize;
+                    }
                 }
             }
             for (var row = 0; row < Rows; row++)
@@ -110,6 +189,11 @@ namespace Arcanoid
             }
         }
 
+        private int CalculateRoundUncertainty()
+        {
+            return DisplayRectangle.Width - ((blockSize.Width + blocksSpacing.Width) * Cols + blocksSpacing.Width);
+        }
+
         private void ArcanoidFormOnPaint(object _, PaintEventArgs __)
         {
             Redraw();
@@ -118,24 +202,37 @@ namespace Arcanoid
         private void ArcanoidFormShown(object _, EventArgs __)
         {
             CalculateElementsSize();
-            InitBlocks();
-            InitPlatform();
+            Init();
             buffer = BufferedGraphicsManager.Current.Allocate(CreateGraphics(), DisplayRectangle);
+            gameTimer.Start();
         }
 
         private void ArcanoidFormOnResize(object _, EventArgs __)
         {
-            ResizeBlocks();
-            if (DisplayRectangle.Width > 10 && DisplayRectangle.Height > 10)
+            InitBlocks();
+            if (DisplayRectangle.Width > 640 && DisplayRectangle.Height > 480)
             {
                 buffer = BufferedGraphicsManager.Current.Allocate(CreateGraphics(), DisplayRectangle);
             }
             Redraw();
         }
 
-        private void moveDelayTick(object _, EventArgs __)
+        private void ReducePlatformSize()
+        {
+            if (platform.RelativeWidth > 0.02)
+            {
+                var sizeReductionSpeed = 0.002;
+                platform.RelativeWidth -= sizeReductionSpeed;
+                platform.RelativeHorizontalPos += sizeReductionSpeed / 2;
+            }
+        }
+
+        private void gameTimerTick(object _, EventArgs __)
         {
             MovePlatform(pressedKey);
+            ReducePlatformSize();
+            CheckColliders();
+            ball.Move();
             Redraw();
         }
 
@@ -144,13 +241,11 @@ namespace Arcanoid
             if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Right)
             {
                 pressedKey = e.KeyCode;
-                moveDelay.Start();
             }
         }
 
         private void ArcanoidForm_KeyUp(object sender, KeyEventArgs e)
         {
-            moveDelay.Stop();
             pressedKey = Keys.None;
         }
     }

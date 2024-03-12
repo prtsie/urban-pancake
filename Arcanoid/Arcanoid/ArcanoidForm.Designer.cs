@@ -34,7 +34,7 @@
             // 
             // gameTimer
             // 
-            gameTimer.Interval = 30;
+            gameTimer.Interval = 10;
             gameTimer.Tick += gameTimerTick;
             // 
             // ArcanoidForm

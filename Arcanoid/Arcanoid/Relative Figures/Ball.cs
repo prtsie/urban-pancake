@@ -11,7 +11,7 @@ namespace Arcanoid
     internal class Ball(double size, double relativeX, double relativeY) : RelativeObject(relativeX, relativeY, size, size)
     {
 
-        public Vector Speed { get; set; } = new Vector(0.01, -0.01);
+        public Vector Speed { get; set; } = new Vector(0.0055, -0.0055);
 
         public void Move()
         {

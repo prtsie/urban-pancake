@@ -35,8 +35,6 @@ namespace Arcanoid
         private Keys pressedKey;
         private bool isGameOver;
 
-        //TODO: öâåòà áëîêîâ
-
         public ArcanoidForm()
         {
             InitializeComponent();
@@ -115,7 +113,7 @@ namespace Arcanoid
         private void CalculateElementsSize()
         {
             blocksSpacing = 0.015;
-            var blockWidth = (1.0 - blocksSpacing * (Cols + 1)) / Cols; //Øèðèíà áëîêîâ ñ ó÷¸òîì äâóõ îòñòóïîâ — ñëåâà è ñïðàâà
+            var blockWidth = (1.0 - blocksSpacing * (Cols + 1)) / Cols;
             blockSize = (blockWidth, 0.02);
             blockRectSize = new(PercentToPixels(blockWidth, Size.Width), PercentToPixels(0.02, Size.Height));
         }
@@ -216,11 +214,10 @@ namespace Arcanoid
 
         private void ArcanoidFormShown(object _, EventArgs __)
         {
-            RelocateBlocks();
             buffer = BufferedGraphicsManager.Current.Allocate(CreateGraphics(), DisplayRectangle);
             buffer.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             gameTimer.Start();
-            Size = Size with { Width = Size.Width + 1 }; //Да, это костыль
+            ArcanoidFormOnResize(new object(), new EventArgs());
         }
 
         private void ArcanoidFormOnResize(object _, EventArgs __)

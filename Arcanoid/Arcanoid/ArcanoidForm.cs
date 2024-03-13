@@ -6,7 +6,7 @@ namespace Arcanoid
     {
         private const int Rows = 10;
         private const int Cols = 15;
-        private const double PlatformSpeed = 0.006;
+        private const double PlatformSpeed = 0.005;
         private const double MinPlatformSize = 0.05;
         private const double MinBallAngle = Math.PI / 4;
         private const double MaxBallAngle = MinBallAngle + Math.PI / 2;

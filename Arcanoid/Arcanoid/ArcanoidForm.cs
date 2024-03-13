@@ -35,7 +35,7 @@ namespace Arcanoid
         private Keys pressedKey;
         private bool isGameOver;
 
-        //TODO: цвета блоков
+        //TODO: Г¶ГўГҐГІГ  ГЎГ«Г®ГЄГ®Гў
 
         public ArcanoidForm()
         {
@@ -115,7 +115,7 @@ namespace Arcanoid
         private void CalculateElementsSize()
         {
             blocksSpacing = 0.015;
-            var blockWidth = (1.0 - blocksSpacing * (Cols + 1)) / Cols; //Ширина блоков с учётом двух отступов — слева и справа
+            var blockWidth = (1.0 - blocksSpacing * (Cols + 1)) / Cols; //ГГЁГ°ГЁГ­Г  ГЎГ«Г®ГЄГ®Гў Г± ГіГ·ВёГІГ®Г¬ Г¤ГўГіГµ Г®ГІГ±ГІГіГЇГ®Гў вЂ” Г±Г«ГҐГўГ  ГЁ Г±ГЇГ°Г ГўГ 
             blockSize = (blockWidth, 0.02);
             blockRectSize = new(PercentToPixels(blockWidth, Size.Width), PercentToPixels(0.02, Size.Height));
         }
@@ -220,7 +220,7 @@ namespace Arcanoid
             buffer = BufferedGraphicsManager.Current.Allocate(CreateGraphics(), DisplayRectangle);
             buffer.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             gameTimer.Start();
-            Size = Size with { Width = Size.Width + 1 }; //Да, это костыль
+            Size = Size with { Width = Size.Width + 1 }; //Р”Р°, СЌС‚Рѕ РєРѕСЃС‚С‹Р»СЊ
         }
 
         private void ArcanoidFormOnResize(object _, EventArgs __)

@@ -21,15 +21,15 @@ namespace Arcanoid
         private readonly Brush fillBrush = Brushes.White;
         private readonly Brush leftSideOfPlatformBrush = Brushes.Blue;
         private readonly Brush rightSideOfPlatformBrush = Brushes.Green;
-        private readonly Brush[] blockBrushes = new Brush[]
-        {
+        private readonly Brush[] blockBrushes =
+        [
             Brushes.Red,
             Brushes.Green,
             Brushes.Blue,
             Brushes.White,
             Brushes.Purple,
             Brushes.Pink
-        };
+        ];
         private readonly Block[,] blocks = new Block[Rows, Cols];
         private readonly Random random = new();
         private Keys pressedKey;

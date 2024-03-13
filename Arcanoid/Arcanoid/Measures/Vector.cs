@@ -16,7 +16,7 @@ namespace Arcanoid.Measures
 
         public readonly double Angle => Math.Atan2(Y, X);
 
-        public Vector Rotate(double angle)
+        public readonly Vector Rotate(double angle)
         {
             return new Vector(X * Math.Cos(angle) - Y * Math.Sin(angle), X * Math.Sin(angle) + Y * Math.Cos(angle));
         }

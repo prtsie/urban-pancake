@@ -8,7 +8,7 @@ using static Arcanoid.Measures.Converter;
 
 namespace Arcanoid
 {
-    internal class Ball(double size, double relativeX, double relativeY) : RelativeObject(relativeX, relativeY, size, size)
+    internal sealed class Ball(double size, double relativeX, double relativeY) : RelativeObject(relativeX, relativeY, size, size)
     {
 
         public Vector Speed { get; set; } = new Vector(0.0055, -0.0055);

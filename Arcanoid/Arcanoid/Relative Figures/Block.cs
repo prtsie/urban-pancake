@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace Arcanoid
 {
-    internal class Block(double relativeX, double relativeY, double relativeWidth, double relativeHeight) : RelativeObject(relativeX, relativeY, relativeWidth, relativeHeight)
+    internal sealed class Block(double relativeX, double relativeY, double relativeWidth, double relativeHeight) : RelativeObject(relativeX, relativeY, relativeWidth, relativeHeight)
     {
         public bool IsBroken { get; set; }
+
+        public Brush Brush { get; set; } = Brushes.White;
     }
 }
